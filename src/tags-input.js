@@ -163,7 +163,7 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
             self._undoValue = item.value;
             self._isEdit = true;
 
-            events.trigger('tag-select', [event.target]);
+            events.trigger('tag-select', event.target);
         };
 
         self.isSelectedTag = function(item) {
