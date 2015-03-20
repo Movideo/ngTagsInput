@@ -157,11 +157,16 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
             return self._isEdit;
         };
 
-        self.selectTag = function(item) {
+        self.selectTag = function(event, item) {
             // deselect on enter, if in editing
             self.selectedTag = item;
             self._undoValue = item.value;
             self._isEdit = true;
+
+            $timeout(function() {
+                var input = angular.element(event.target).parent().parent().find('input');
+                input[0].focus();
+            });
         };
 
         self.isSelectedTag = function(item) {

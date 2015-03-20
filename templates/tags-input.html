@@ -1,9 +1,9 @@
 <div class="host" tabindex="-1" ti-transclude-append>
   <div class="tags" ng-class="{focused: hasFocus}">
     <ul class="tag-list">
-      <li class="tag-item" ng-repeat="tag in tagList.items track by track(tag)" ng-class="{ selected: tag == tagList.selected }" ng-dblclick="tagList.selectTag(tag)">
+      <li class="tag-item" ng-repeat="tag in tagList.items track by track(tag)" ng-class="{ selected: tag == tagList.selected }">
         <div ng-hide="tagList.isEdit() && tagList.isSelectedTag(tag)">
-          <span ng-bind="getDisplayText(tag)"></span>
+          <span ng-bind="getDisplayText(tag)" ng-dblclick="tagList.selectTag($event, tag)"></span>
           <a class="remove-button" ng-click="tagList.remove($index)" ng-bind="options.removeTagSymbol"></a>
         </div>
         <div ng-show="tagList.isEdit() && tagList.isSelectedTag(tag)">
