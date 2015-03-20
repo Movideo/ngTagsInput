@@ -163,10 +163,7 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
             self._undoValue = item.value;
             self._isEdit = true;
 
-            $timeout(function() {
-                var input = angular.element(event.target).parent().parent().find('input');
-                input[0].focus();
-            });
+            events.trigger('tag-select', [event.target]);
         };
 
         self.isSelectedTag = function(item) {
@@ -353,6 +350,12 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
                     // Sets the element to its dirty state
                     // In Angular 1.3 this will be replaced with $setDirty.
                     ngModelCtrl.$setViewValue(scope.tags);
+                })
+                .on('tag-select', function(elem) {
+                    $timeout(function() {
+                        var input = angular.element(elem).parent().parent().find('input');
+                        input[0].focus();
+                    });
                 })
                 .on('invalid-tag', function() {
                     scope.newTag.invalid = true;
