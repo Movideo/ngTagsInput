@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * @ngdoc directive
  * @name tagsInput
@@ -137,22 +139,26 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
         };
 
         self.selectedTag = null;
+        self.selectedTagElement = null;
         self._isEdit = false;
         self._undoValue = null;
 
         self.closeEdit = function() {
+            self.selectedTagElement.html(self.selectedTag.value);
+            self.selectedTagElement = null;
             self._isEdit = false;
         };
 
-        self.edited = function(event) {
-            events.trigger('tag-edit', event.target);
+        self.edited = function() {
+            self.selectedTag.value = self.selectedTagElement.html();
+            events.trigger('tag-edit', self.selectedTagElement);
             self.closeEdit();
         };
 
-        self.cancelEdit = function(event) {
+        self.cancelEdit = function() {
             self.selectedTag.value = self._undoValue;
 
-            events.trigger('tag-edit', event.target);
+            events.trigger('tag-edit', self.selectedTagElement);
             self.closeEdit();
         };
 
@@ -163,6 +169,7 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
         self.selectTag = function(event, item) {
             // deselect on enter, if in editing
             self.selectedTag = item;
+            self.selectedTagElement = angular.element(event.target);
             self._undoValue = item.value;
             self._isEdit = true;
 
@@ -393,8 +400,7 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
                     ngModelCtrl.$setDirty();
                 })
                 .on('tag-edit', function(elem) {
-                    var element = angular.element(elem);
-                    element.attr('contenteditable', false);
+                    elem.attr('contenteditable', false);
                 })
                 .on('tag-select', function(elem) {
                     var element = angular.element(elem);
