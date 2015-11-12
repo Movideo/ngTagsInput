@@ -5,7 +5,7 @@
  * Copyright (c) 2013-2015 Michael Benford
  * License: MIT
  *
- * Generated at 2015-11-12 16:11:49 +1100
+ * Generated at 2015-11-12 16:45:43 +1100
  */
 (function() {
 'use strict';
@@ -429,10 +429,12 @@ tagsInput.directive('tagsInput', ["$timeout", "$document", "$window", "tagsInput
                 })
                 .on('tag-edit', function(elem) {
                     elem.attr('contenteditable', false);
+                    elem.css('outline', false);
                 })
                 .on('tag-select', function(elem) {
                     var element = angular.element(elem);
                     element.attr('contenteditable', true);
+                    element.css('outline', 'none');
                     element.focus();
                 })
                 .on('invalid-tag', function() {
