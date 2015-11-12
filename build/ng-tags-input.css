@@ -129,6 +129,9 @@ tags-input .autocomplete .suggestion-list {
   margin: 0;
   padding: 0;
   list-style-type: none;
+  max-height: 280px;
+  overflow-y: auto;
+  position: relative;
 }
 tags-input .autocomplete .suggestion-item {
   padding: 5px 10px;
