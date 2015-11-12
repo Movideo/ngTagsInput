@@ -400,10 +400,12 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
                 })
                 .on('tag-edit', function(elem) {
                     elem.attr('contenteditable', false);
+                    elem.css('outline', false);
                 })
                 .on('tag-select', function(elem) {
                     var element = angular.element(elem);
                     element.attr('contenteditable', true);
+                    element.css('outline', 'none');
                     element.focus();
                 })
                 .on('invalid-tag', function() {
