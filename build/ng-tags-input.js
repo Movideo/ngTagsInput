@@ -5,7 +5,7 @@
  * Copyright (c) 2013-2015 Michael Benford
  * License: MIT
  *
- * Generated at 2015-11-12 16:45:43 +1100
+ * Generated at 2015-11-12 17:16:37 +1100
  */
 (function() {
 'use strict';
@@ -173,13 +173,13 @@ tagsInput.directive('tagsInput', ["$timeout", "$document", "$window", "tagsInput
         self._undoValue = null;
 
         self.closeEdit = function() {
-            self.selectedTagElement.html(self.selectedTag.value);
+            self.selectedTagElement.html(tiUtil.replaceSpacesWithDashes(self.selectedTag.value));
             self.selectedTagElement = null;
             self._isEdit = false;
         };
 
         self.edited = function() {
-            self.selectedTag.value = self.selectedTagElement.html();
+            self.selectedTag.value = tiUtil.replaceSpacesWithDashes(self.selectedTagElement.html());
             events.trigger('tag-edit', self.selectedTagElement);
             self.closeEdit();
         };

@@ -144,13 +144,13 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
         self._undoValue = null;
 
         self.closeEdit = function() {
-            self.selectedTagElement.html(self.selectedTag.value);
+            self.selectedTagElement.html(tiUtil.replaceSpacesWithDashes(self.selectedTag.value));
             self.selectedTagElement = null;
             self._isEdit = false;
         };
 
         self.edited = function() {
-            self.selectedTag.value = self.selectedTagElement.html();
+            self.selectedTag.value = tiUtil.replaceSpacesWithDashes(self.selectedTagElement.html());
             events.trigger('tag-edit', self.selectedTagElement);
             self.closeEdit();
         };
