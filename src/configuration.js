@@ -7,7 +7,7 @@
  *
  * @description
  * Sets global configuration settings for both tagsInput and autoComplete directives. It's also used internally to parse and
- * initialize options from HTML attributes.
+ *  initialize options from HTML attributes.
  */
 tagsInput.provider('tagsInputConfig', function() {
     var globalDefaults = {},
@@ -16,9 +16,8 @@ tagsInput.provider('tagsInputConfig', function() {
 
     /**
      * @ngdoc method
-     * @name setDefaults
+     * @name tagsInputConfig#setDefaults
      * @description Sets the default configuration option for a directive.
-     * @methodOf tagsInputConfig
      *
      * @param {string} directive Name of the directive to be configured. Must be either 'tagsInput' or 'autoComplete'.
      * @param {object} defaults Object containing options and their values.
@@ -30,11 +29,10 @@ tagsInput.provider('tagsInputConfig', function() {
         return this;
     };
 
-    /***
+    /**
      * @ngdoc method
-     * @name setActiveInterpolation
+     * @name tagsInputConfig#setActiveInterpolation
      * @description Sets active interpolation for a set of options.
-     * @methodOf tagsInputConfig
      *
      * @param {string} directive Name of the directive to be configured. Must be either 'tagsInput' or 'autoComplete'.
      * @param {object} options Object containing which options should have interpolation turned on at all times.
@@ -46,11 +44,10 @@ tagsInput.provider('tagsInputConfig', function() {
         return this;
     };
 
-    /***
+    /**
      * @ngdoc method
-     * @name setTextAutosizeThreshold
+     * @name tagsInputConfig#setTextAutosizeThreshold
      * @description Sets the threshold used by the tagsInput directive to re-size the inner input field element based on its contents.
-     * @methodOf tagsInputConfig
      *
      * @param {number} threshold Threshold value, in pixels.
      *

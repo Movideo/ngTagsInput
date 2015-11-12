@@ -1,3 +1,54 @@
+## 3.0.0 (2015-07-13)
+
+#### Bug Fixes
+
+* **autocomplete:**
+  * Stop preventing keys from being propagated ([b0db7633](https://github.com/mbenford/ngTagsInput/commit/b0db763301d483960cbb72bc0c3338a196eb8ef2), [#384](https://github.com/mbenford/ngTagsInput/issues/384))
+  * Hide the suggestion list after a tag is removed ([731ef9eb](https://github.com/mbenford/ngTagsInput/commit/731ef9eb0874ae083cba47c942034cb9109e6cf9))
+* **tagsInput:**
+  * Fix makeObjectArray function ([b5dc57f5](https://github.com/mbenford/ngTagsInput/commit/b5dc57f542c11351ad881e45cc238f75b9adc24a))
+  * Remove model auto-initialization ([f9fcb12d](https://github.com/mbenford/ngTagsInput/commit/f9fcb12dc1c71a77e52ba573cd4505e663131625), [#320](https://github.com/mbenford/ngTagsInput/issues/320), [#204](https://github.com/mbenford/ngTagsInput/issues/204))
+
+#### Features
+
+* **tagsInput:**
+  * Add newTagText option ([215fe923](https://github.com/mbenford/ngTagsInput/commit/215fe923b68e0e6034ae34c9b06ea89dff7d1110), [#197](https://github.com/mbenford/ngTagsInput/issues/197))
+  * Add onTagClicked callback ([aa8d190b](https://github.com/mbenford/ngTagsInput/commit/aa8d190b6edc705f89d407cf65a8ca6266238616))
+  * Add support for Angular 1.3 ([3355f3fa](https://github.com/mbenford/ngTagsInput/commit/3355f3fa7451dc0b4ca183875ba183a89c543be4), [#318](https://github.com/mbenford/ngTagsInput/issues/318), [#341](https://github.com/mbenford/ngTagsInput/issues/341), [#373](https://github.com/mbenford/ngTagsInput/issues/373))
+
+#### Breaking Changes
+
+* Code that relies on auto-initialization of the model may stop working. ([f9fcb12d](https://github.com/mbenford/ngTagsInput/commit/f9fcb12dc1c71a77e52ba573cd4505e663131625))
+* This uses new API methods of Angular 1.3 and therefore the directive will no longer work with previous versions of the framework. ([3355f3fa](https://github.com/mbenford/ngTagsInput/commit/3355f3fa7451dc0b4ca183875ba183a89c543be4))
+
+## 2.3.0 (2015-03-23)
+
+#### Bug Fixes
+
+* **autocomplete:**
+  * Make match highlighting case insensitive ([42ca7e46](https://github.com/mbenford/ngTagsInput/commit/42ca7e46ea37d5dd213a62bbb0706b2073f592de), [#388](https://github.com/mbenford/ngTagsInput/issues/388))
+  * Make a copy of the suggestion before adding ([b12f5074](https://github.com/mbenford/ngTagsInput/commit/b12f50744e0b60371c134bbec3a54d2a474bfacd))
+  * Fix existing tags diff algorithm ([913e95a2](https://github.com/mbenford/ngTagsInput/commit/913e95a2caf6c21736650798d6d1cb25f6619f2f), [#232](https://github.com/mbenford/ngTagsInput/issues/232))
+* **tagsInput:**
+  * Fix addOnPaste issue with jQuery ([664dfc70](https://github.com/mbenford/ngTagsInput/commit/664dfc70942ece06b0b97d85cbc52d1954398696))
+  * Fix add-on-paste issue in IE ([e752682d](https://github.com/mbenford/ngTagsInput/commit/e752682d067cf48a2969820fb4f383bcbf807fa9), [#325](https://github.com/mbenford/ngTagsInput/issues/325))
+  * Ensure autocomplete attribute is off ([8359e608](https://github.com/mbenford/ngTagsInput/commit/8359e608e2cf1c83e61828f456081f5a33f374ab), [#368](https://github.com/mbenford/ngTagsInput/issues/368))
+  * Fix element validity on tag removal ([0bfc7ee3](https://github.com/mbenford/ngTagsInput/commit/0bfc7ee3f40399fee5e8dfa6562dbbc3574cdbf1), [#381](https://github.com/mbenford/ngTagsInput/issues/381))
+
+#### Features
+
+* **autocomplete:**
+  * Add custom template support ([b550b119](https://github.com/mbenford/ngTagsInput/commit/b550b1190509e399742f32abb6299c179fe7bae1), [#99](https://github.com/mbenford/ngTagsInput/issues/99))
+  * Make $index available to custom templates ([8611877e](https://github.com/mbenford/ngTagsInput/commit/8611877ef43581fe493fd3195726f027af2ae3cc))
+  * Add autoscroll support ([13796600](https://github.com/mbenford/ngTagsInput/commit/13796600cb81d0ef111c5c55ac76d98bf0832fa9), [#216](https://github.com/mbenford/ngTagsInput/issues/216))
+* **tagsInput:**
+  * Add custom template support ([45e5d998](https://github.com/mbenford/ngTagsInput/commit/45e5d99809f66ea52e2206a476eb546867bbe4a8))
+  * Add ng-required support ([8f17b9f1](https://github.com/mbenford/ngTagsInput/commit/8f17b9f11bd359fe0066133af8b93914611150ea), [#157](https://github.com/mbenford/ngTagsInput/issues/157))
+  * Add support for tag navigation ([18760b24](https://github.com/mbenford/ngTagsInput/commit/18760b249978203bd4aaa798aa07b72199c73aed), [#350](https://github.com/mbenford/ngTagsInput/issues/350))
+  * Add ng-disabled support ([870caba6](https://github.com/mbenford/ngTagsInput/commit/870caba653c4874b952b65893e4de07cf605d2b8), [#102](https://github.com/mbenford/ngTagsInput/issues/102))
+  * Add keyProperty and displayProperty options ([2c780f9a](https://github.com/mbenford/ngTagsInput/commit/2c780f9a53711317f75a7141c6965f1568b9daae), [#265](https://github.com/mbenford/ngTagsInput/issues/265))
+  * Add onTagAdding/onTagRemoving callbacks ([c4ceed54](https://github.com/mbenford/ngTagsInput/commit/c4ceed546b30cb6f2052de6b5edcf0f759803ef7), [#100](https://github.com/mbenford/ngTagsInput/issues/100))
+
 ## 2.2.0 (2015-03-02)
 
 #### Bug Fixes

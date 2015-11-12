@@ -15,6 +15,7 @@ module.exports = function(config) {
             'test/lib/angular-mocks.js',
             'test/helpers.js',
             'test/matchers.js',
+            'src/constants.js',
             'test/*.spec.js',
             'src/init.js',
             'src/*.js',
@@ -41,8 +42,7 @@ module.exports = function(config) {
         exclude: [],
 
         // test results reporter to use
-        // possible values: 'dots', 'progress', 'junit', 'growl', 'coverage'
-        reporters: ['progress'],
+        reporters: ['mocha'],
 
         // web server port
         port: 9876,
@@ -65,7 +65,7 @@ module.exports = function(config) {
         // - Safari (only Mac)
         // - PhantomJS
         // - IE (only Windows)
-        browsers: ['Chrome'],
+        browsers: ['PhantomJS'],
 
         // If browser does not capture in given timeout [ms], kill it
         captureTimeout: 60000,

@@ -18,6 +18,8 @@ module.exports = function(grunt) {
         pkg: grunt.file.readJSON('package.json'),
         bowerDirectory: '../ngTagsInput-bower',
         bowerFile: '<%= bowerDirectory %>/bower.json',
+        websiteDirectory: '../ngTagsInput-website',
+        websiteConfigFile: '<%= websiteDirectory %>/_config.yml',
 
         files: {
             js: {
@@ -25,6 +27,7 @@ module.exports = function(grunt) {
                     'src/constants.js',
                     'src/init.js',
                     'src/tags-input.js',
+                    'src/tag-item.js',
                     'src/auto-complete.js',
                     'src/auto-complete-match.js',
                     'src/transclude-append.js',
@@ -50,7 +53,12 @@ module.exports = function(grunt) {
                 }
             },
             html: {
-                src: ['templates/tags-input.html', 'templates/auto-complete.html', 'templates/auto-complete-match.html'],
+                src: [
+                    'templates/tags-input.html',
+                    'templates/tag-item.html',
+                    'templates/auto-complete.html',
+                    'templates/auto-complete-match.html'
+                ],
                 out: 'tmp/templates.js'
             },
             zip: {
@@ -86,6 +94,7 @@ module.exports = function(grunt) {
 
     grunt.registerTask('test', ['jshint','karma:local']);
     grunt.registerTask('coverage', ['test', 'open:coverage']);
+    grunt.registerTask('docs', ['clean:build', 'dgeni']);
 
     grunt.registerTask('travis', [
         'pack',
@@ -115,7 +124,11 @@ module.exports = function(grunt) {
         'shell:git',
         'copy:bower',
         'update-bower-version',
-        'shell:git_bower'
+        'shell:git_bower',
+        'dgeni',
+        'copy:website',
+        'update-website-version',
+        'shell:git_website'
     ]);
 
     grunt.registerTask('default', ['pack']);

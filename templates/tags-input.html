@@ -1,20 +1,17 @@
-<div class="host" tabindex="-1" ti-transclude-append>
+<div class="host" tabindex="-1" tabindex="-1" ng-click="eventHandlers.host.click()" ti-transclude-append>
   <div class="tags" ng-class="{focused: hasFocus}">
     <ul class="tag-list">
-      <li class="tag-item" ng-repeat="tag in tagList.items track by track(tag)" ng-class="{ selected: tag == tagList.selected, editing: tagList.isEdit() && tagList.isSelectedTag(tag) }">
-        <div ng-hide="tagList.isEdit() && tagList.isSelectedTag(tag)">
-          <span ng-bind="getDisplayText(tag)" ng-dblclick="tagList.selectTag($event, tag)"></span>
-          <a class="remove-button" ng-click="tagList.remove($index)" ng-bind="options.removeTagSymbol"></a>
-        </div>
-        <div ng-show="tagList.isEdit() && tagList.isSelectedTag(tag)">
-          <input autofocus class="input" type="text" ng-enter="tagList.edited()" ng-escape="tagList.cancelEdit()" ng-model="tag.value">
-        </div>
+      <li class="tag-item"
+          ng-repeat="tag in tagList.items track by track(tag)"
+          ng-class="{ selected: tag == tagList.selected, editing: tagList.isEdit() && tagList.isSelectedTag(tag) }"
+          ng-click="eventHandlers.tag.click(tag)">
+          <ti-tag-item tag-list="tagList" data="tag"></ti-tag-item>
       </li>
     </ul>
     <input class="input new-tag-input"
            autocomplete="off"
            ng-model="newTag.text"
-           ng-change="eventHandlers.input.change(newTag.text)"
+           ng-model-options="{getterSetter: true}"
            ng-keydown="eventHandlers.input.keydown($event)"
            ng-focus="eventHandlers.input.focus($event)"
            ng-blur="eventHandlers.input.blur($event)"

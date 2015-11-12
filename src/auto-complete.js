@@ -9,29 +9,27 @@
  * Provides autocomplete support for the tagsInput directive.
  *
  * @param {expression} source Expression to evaluate upon changing the input content. The input value is available as
- *                            $query. The result of the expression must be a promise that eventually resolves to an
- *                            array of strings.
- * @param {string=} [displayProperty=text] Property to be rendered as the autocomplete label.
+ *    $query. The result of the expression must be a promise that eventually resolves to an array of strings.
+ * @param {string=} [template=NA] URL or id of a custom template for rendering each element of the autocomplete list.
+ * @param {string=} [displayProperty=tagsInput.displayText] Property to be rendered as the autocomplete label.
  * @param {number=} [debounceDelay=100] Amount of time, in milliseconds, to wait before evaluating the expression in
- *                                      the source option after the last keystroke.
+ *    the source option after the last keystroke.
  * @param {number=} [minLength=3] Minimum number of characters that must be entered before evaluating the expression
- *                                 in the source option.
+ *    in the source option.
  * @param {boolean=} [highlightMatchedText=true] Flag indicating that the matched text will be highlighted in the
- *                                               suggestions list.
+ *    suggestions list.
  * @param {number=} [maxResultsToShow=10] Maximum number of results to be displayed at a time.
  * @param {boolean=} [loadOnDownArrow=false] Flag indicating that the source option will be evaluated when the down arrow
- *                                           key is pressed and the suggestion list is closed. The current input value
- *                                           is available as $query.
- * @param {boolean=} {loadOnEmpty=false} Flag indicating that the source option will be evaluated when the input content
- *                                       becomes empty. The $query variable will be passed to the expression as an empty string.
- * @param {boolean=} {loadOnFocus=false} Flag indicating that the source option will be evaluated when the input element
- *                                       gains focus. The current input value is available as $query.
+ *    key is pressed and the suggestion list is closed. The current input value is available as $query.
+ * @param {boolean=} [loadOnEmpty=false] Flag indicating that the source option will be evaluated when the input content
+ *    becomes empty. The $query variable will be passed to the expression as an empty string.
+ * @param {boolean=} [loadOnFocus=false] Flag indicating that the source option will be evaluated when the input element
+ *    gains focus. The current input value is available as $query.
  * @param {boolean=} [selectFirstMatch=true] Flag indicating that the first match will be automatically selected once
- *                                           the suggestion list is shown.
- * @param {string=} [template=] URL or id of a custom template for rendering each element of the autocomplete list.
+ *    the suggestion list is shown.
  */
 tagsInput.directive('autoComplete', function($document, $timeout, $sce, $q, tagsInputConfig, tiUtil) {
-    function SuggestionList(loadFn, options) {
+    function SuggestionList(loadFn, options, events) {
         var self = {}, getDifference, lastPromise, getTagId;
 
         getTagId = function() {
@@ -40,7 +38,13 @@ tagsInput.directive('autoComplete', function($document, $timeout, $sce, $q, tags
 
         getDifference = function(array1, array2) {
             return array1.filter(function(item) {
-                return !tiUtil.findInObjectArray(array2, item, getTagId());
+                return !tiUtil.findInObjectArray(array2, item, getTagId(), function(a, b) {
+                    if (options.tagsInput.replaceSpacesWithDashes) {
+                        a = tiUtil.replaceSpacesWithDashes(a);
+                        b = tiUtil.replaceSpacesWithDashes(b);
+                    }
+                    return tiUtil.defaultComparer(a, b);
+                });
             });
         };
 
@@ -101,6 +105,7 @@ tagsInput.directive('autoComplete', function($document, $timeout, $sce, $q, tags
             }
             self.index = index;
             self.selected = self.items[index];
+            events.trigger('suggestion-selected', index);
         };
 
         self.reset();
@@ -108,12 +113,30 @@ tagsInput.directive('autoComplete', function($document, $timeout, $sce, $q, tags
         return self;
     }
 
+    function scrollToElement(root, index) {
+        var element = root.find('li').eq(index),
+            parent = element.parent(),
+            elementTop = element.prop('offsetTop'),
+            elementHeight = element.prop('offsetHeight'),
+            parentHeight = parent.prop('clientHeight'),
+            parentScrollTop = parent.prop('scrollTop');
+
+        if (elementTop < parentScrollTop) {
+            parent.prop('scrollTop', elementTop);
+        }
+        else if (elementTop + elementHeight > parentHeight + parentScrollTop) {
+            parent.prop('scrollTop', elementTop + elementHeight - parentHeight);
+        }
+    }
+
     return {
         restrict: 'E',
         require: '^tagsInput',
         scope: { source: '&' },
         templateUrl: 'ngTagsInput/auto-complete.html',
-        controller: function($scope, $attrs) {
+        controller: function($scope, $element, $attrs) {
+            $scope.events = tiUtil.simplePubSub();
+
             tagsInputConfig.load('autoComplete', $scope, $attrs, {
                 template: [String, 'ngTagsInput/auto-complete-match.html'],
                 debounceDelay: [Number, 100],
@@ -127,7 +150,7 @@ tagsInput.directive('autoComplete', function($document, $timeout, $sce, $q, tags
                 displayProperty: [String, '']
             });
 
-            $scope.suggestionList = new SuggestionList($scope.source, $scope.options);
+            $scope.suggestionList = new SuggestionList($scope.source, $scope.options, $scope.events);
 
             this.registerAutocompleteMatch = function() {
                 return {
@@ -145,6 +168,7 @@ tagsInput.directive('autoComplete', function($document, $timeout, $sce, $q, tags
                 suggestionList = scope.suggestionList,
                 tagsInput = tagsInputCtrl.registerAutocomplete(),
                 options = scope.options,
+                events = scope.events,
                 shouldLoadSuggestions;
 
             options.tagsInput = tagsInput.getOptions();
@@ -162,7 +186,7 @@ tagsInput.directive('autoComplete', function($document, $timeout, $sce, $q, tags
                 var added = false;
 
                 if (suggestionList.selected) {
-                    tagsInput.addTag(suggestionList.selected);
+                    tagsInput.addTag(angular.copy(suggestionList.selected));
                     suggestionList.reset();
                     tagsInput.focusInput();
 
@@ -176,7 +200,7 @@ tagsInput.directive('autoComplete', function($document, $timeout, $sce, $q, tags
             };
 
             tagsInput
-                .on('tag-added invalid-tag input-blur', function() {
+                .on('tag-added tag-removed invalid-tag input-blur', function() {
                     suggestionList.reset();
                 })
                 .on('input-change', function(value) {
@@ -197,7 +221,7 @@ tagsInput.directive('autoComplete', function($document, $timeout, $sce, $q, tags
                     var key = event.keyCode,
                         handled = false;
 
-                    if (hotkeys.indexOf(key) === -1) {
+                    if (tiUtil.isModifierOn(event) || hotkeys.indexOf(key) === -1) {
                         return;
                     }
 
@@ -232,6 +256,10 @@ tagsInput.directive('autoComplete', function($document, $timeout, $sce, $q, tags
                         return false;
                     }
                 });
+
+            events.on('suggestion-selected', function(index) {
+                scrollToElement(element, index);
+            });
         }
     };
 });
