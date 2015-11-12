@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * @ngdoc directive
  * @name tagsInput
@@ -63,11 +61,11 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
             var tagText = getTagText(tag);
 
             return tagText &&
-                   tagText.length >= options.minLength &&
-                   tagText.length <= options.maxLength &&
-                   options.allowedTagsPattern.test(tagText) &&
-                   !tiUtil.findInObjectArray(self.items, tag, options.keyProperty || options.displayProperty) &&
-                   onTagAdding({ $tag: tag });
+                tagText.length >= options.minLength &&
+                tagText.length <= options.maxLength &&
+                options.allowedTagsPattern.test(tagText) &&
+                !tiUtil.findInObjectArray(self.items, tag, options.keyProperty || options.displayProperty) &&
+                onTagAdding({ $tag: tag });
         };
 
         self.items = [];
@@ -146,15 +144,15 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
             self._isEdit = false;
         };
 
-        self.edited = function() {
-            events.trigger('tag-edit');
+        self.edited = function(event) {
+            events.trigger('tag-edit', event.target);
             self.closeEdit();
         };
 
-        self.cancelEdit = function() {
+        self.cancelEdit = function(event) {
             self.selectedTag.value = self._undoValue;
 
-            events.trigger('tag-edit');
+            events.trigger('tag-edit', event.target);
             self.closeEdit();
         };
 
@@ -394,11 +392,14 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
                     // Unfortunately this won't trigger any registered $parser and there's no safe way to do it.
                     ngModelCtrl.$setDirty();
                 })
+                .on('tag-edit', function(elem) {
+                    var element = angular.element(elem);
+                    element.attr('contenteditable', false);
+                })
                 .on('tag-select', function(elem) {
-                    $timeout(function() {
-                        var input = angular.element(elem).parent().parent().find('input');
-                        input[0].focus();
-                    });
+                    var element = angular.element(elem);
+                    element.attr('contenteditable', true);
+                    element.focus();
                 })
                 .on('invalid-tag', function() {
                     scope.newTag.invalid = true;
