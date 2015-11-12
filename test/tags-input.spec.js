@@ -37,8 +37,8 @@ describe('tags-input directive', function() {
     }
 
     function generateTags(count) {
-        return generateArray(count, function(index) {
-            return { text: 'Tag' + index };
+        return range(count, function(index) {
+            return { text: 'Tag' + (index + 1) };
         });
     }
 
@@ -51,11 +51,11 @@ describe('tags-input directive', function() {
     }
 
     function getTagText(index) {
-        return getTag(index).find('span').html();
+        return getTag(index).find('ti-tag-item > ng-include > span').html();
     }
 
     function getRemoveButton(index) {
-        return getTag(index).find('a').first();
+        return getTag(index).find('ti-tag-item > ng-include > a').first();
     }
 
     function getInput() {
@@ -102,12 +102,12 @@ describe('tags-input directive', function() {
     }
 
     describe('basic features', function() {
-        it('initializes the model as an empty array', function() {
+        it('doesn\'t initialize the model if it is undefined', function() {
             // Arrange/Act
             compile();
 
             // Assert
-            expect($scope.tags).toEqual([]);
+            expect($scope.tags).toBeUndefined();
         });
 
         it('renders the correct number of tags', function() {
@@ -307,7 +307,7 @@ describe('tags-input directive', function() {
             newTag('');
 
             // Assert
-            expect($scope.tags).toEqual([]);
+            expect($scope.tags).toBeUndefined();
             expect(isolateScope.newTag.invalid).toBeFalsy();
         });
 
@@ -442,6 +442,33 @@ describe('tags-input directive', function() {
         });
     });
 
+    describe('text option', function() {
+        it('updates as text is typed into the input field', function() {
+            // Arrange
+            compile('text="prop"');
+
+            // Act
+            sendKeyPress(65);
+            sendKeyPress(66);
+            sendKeyPress(67);
+
+            // Assert
+            expect($scope.prop).toBe('ABC');
+        });
+
+        it('updates the input field as the scope\'s model changes', function() {
+            // Arrange
+            compile('text="prop"');
+
+            // Act
+            $scope.prop = 'ABC';
+            $scope.$digest();
+
+            // Assert
+            expect(getInput().val()).toBe('ABC');
+        });
+    });
+
     describe('tabindex option', function() {
         it('sets the input field tab index', function() {
             // Arrange/Act
@@ -480,7 +507,7 @@ describe('tags-input directive', function() {
             newTag('foo', KEYS.enter);
 
             // Assert
-            expect($scope.tags).toEqual([]);
+            expect($scope.tags).toBeUndefined();
         });
 
         it('initializes the option to true', function() {
@@ -512,7 +539,7 @@ describe('tags-input directive', function() {
             newTag('foo', KEYS.space);
 
             // Assert
-            expect($scope.tags).toEqual([]);
+            expect($scope.tags).toBeUndefined();
         });
 
         it('initializes the option to false', function() {
@@ -544,7 +571,7 @@ describe('tags-input directive', function() {
             newTag('foo', KEYS.comma);
 
             // Assert
-            expect($scope.tags).toEqual([]);
+            expect($scope.tags).toBeUndefined();
         });
 
         it('initializes the option to true', function() {
@@ -585,7 +612,7 @@ describe('tags-input directive', function() {
 
             it('adds a tag when the input field loses focus to any element on the page but the directive itself', function() {
                 // Arrange
-                isolateScope.newTag.text = 'foo';
+                isolateScope.newTag.text('foo');
                 body.focus();
 
                 // Act
@@ -598,7 +625,7 @@ describe('tags-input directive', function() {
 
             it('adds a tag when the input field loses focus to the browser window', function() {
                 // Arrange
-                isolateScope.newTag.text = 'foo';
+                isolateScope.newTag.text('foo');
                 spyOn($document, 'prop');
                 $document.prop.and.returnValue(getInput()[0]);
 
@@ -612,7 +639,7 @@ describe('tags-input directive', function() {
 
             it('does not add a tag when the input field loses focus to the directive itself', function() {
                 // Arrange
-                isolateScope.newTag.text = 'foo';
+                isolateScope.newTag.text('foo');
                 element.find('div').focus();
 
                 // Act
@@ -620,7 +647,7 @@ describe('tags-input directive', function() {
                 $timeout.flush();
 
                 // Assert
-                expect($scope.tags).toEqual([]);
+                expect($scope.tags).toBeUndefined();
             });
         });
 
@@ -628,13 +655,13 @@ describe('tags-input directive', function() {
             it('does not add a new tag when the input field loses focus', function() {
                 // Arrange
                 compile('add-on-blur="false"');
-                isolateScope.newTag.text = 'foo';
+                isolateScope.newTag.text('foo');
 
                 // Act
                 getInput().triggerHandler('blur');
 
                 // Assert
-                expect($scope.tags).toEqual([]);
+                expect($scope.tags).toBeUndefined();
             });
         });
     });
@@ -647,11 +674,13 @@ describe('tags-input directive', function() {
                 clipboardData: jasmine.createSpyObj('clipboardData', ['getData']),
                 preventDefault: jasmine.createSpy()
             };
-            windowClipboardData = $window.clipboardData;
+            windowClipboardData = null;
         });
 
         afterEach(function() {
-            $window.clipboardData = windowClipboardData;
+            if (windowClipboardData) {
+                $window.clipboardData = windowClipboardData;
+            }
         });
 
         it('initializes the option to false', function() {
@@ -662,27 +691,28 @@ describe('tags-input directive', function() {
             expect(isolateScope.options.addOnPaste).toBe(false);
         });
 
-
         describe('option is true', function() {
             var eventSetups = {
-                vanillaJS: function() {
+                jqLite: function(returnValue) {
                     eventData.clipboardData.getData.and.callFake(function(args) {
-                        return args === 'text/plain' ? 'tag1, tag2, tag3' : null;
+                        return args === 'text/plain' ? returnValue : null;
                     });
                 },
-                ie: function() {
-                    $window.clipboardData = eventData.clipboardData;
-                    delete eventData.clipboardData;
-                    $window.clipboardData.getData.and.callFake(function(args) {
-                        return args === 'Text' ? 'tag1, tag2, tag3' : null;
-                    });
-                },
-                jquery: function() {
+                jQuery: function(returnValue) {
                     eventData.originalEvent = { clipboardData: eventData.clipboardData };
                     delete eventData.clipboardData;
                     eventData.originalEvent.clipboardData.getData.and.callFake(function(args) {
-                        return args === 'text/plain' ? 'tag1, tag2, tag3' : null;
+                        return args === 'text/plain' ? returnValue : null;
                     });
+                },
+                ie: function(returnValue) {
+                    delete eventData.clipboardData;
+                    windowClipboardData = $window.clipboardData;
+                    $window.clipboardData = {
+                        getData: function(args) {
+                            return args === 'Text' ? returnValue : null;
+                        }
+                    };
                 }
             };
 
@@ -690,7 +720,7 @@ describe('tags-input directive', function() {
                 it('splits the pasted text into tags if there is more than one tag (' + name + ')', function() {
                     // Arrange
                     compile('add-on-paste="true"');
-                    setup();
+                    setup('tag1, tag2, tag3');
 
                     // Act
                     var event = jQuery.Event('paste', eventData);
@@ -704,20 +734,20 @@ describe('tags-input directive', function() {
                     ]);
                     expect(eventData.preventDefault).toHaveBeenCalled();
                 });
-            });
 
-            it('doesn\'t split the pasted text into tags if there is just one tag', function() {
-                // Arrange
-                compile('add-on-paste="true"');
-                eventData.clipboardData.getData.and.returnValue('tag1');
+                it('doesn\'t split the pasted text into tags if there is just one tag (' + name + ')', function() {
+                    // Arrange
+                    compile('add-on-paste="true"');
+                    setup('Tag1');
 
-                // Act
-                var event = jQuery.Event('paste', eventData);
-                getInput().trigger(event);
+                    // Act
+                    var event = jQuery.Event('paste', eventData);
+                    getInput().trigger(event);
 
-                // Assert
-                expect($scope.tags).toEqual([]);
-                expect(eventData.preventDefault).not.toHaveBeenCalled();
+                    // Assert
+                    expect($scope.tags).toBeUndefined();
+                    expect(eventData.preventDefault).not.toHaveBeenCalled();
+                });
             });
         });
 
@@ -731,7 +761,7 @@ describe('tags-input directive', function() {
             getInput().trigger(event);
 
             // Assert
-            expect($scope.tags).toEqual([]);
+            expect($scope.tags).toBeUndefined();
             expect(eventData.preventDefault).not.toHaveBeenCalled();
         });
 
@@ -904,7 +934,7 @@ describe('tags-input directive', function() {
             newTag('foobar.com');
 
             // Assert
-            expect($scope.tags).toEqual([]);
+            expect($scope.tags).toBeUndefined();
         });
 
         it('initializes the option to .+', function() {
@@ -946,7 +976,7 @@ describe('tags-input directive', function() {
             newTag('foo');
 
             // Assert
-            expect($scope.tags).toEqual([]);
+            expect($scope.tags).toBeUndefined();
             expect(getInput()).toHaveClass('invalid-tag');
         });
     });
@@ -991,7 +1021,7 @@ describe('tags-input directive', function() {
             newTag('foobar');
 
             // Assert
-            expect($scope.tags).toEqual([]);
+            expect($scope.tags).toBeUndefined();
             expect(getInput()).toHaveClass('invalid-tag');
         });
     });
@@ -1131,7 +1161,7 @@ describe('tags-input directive', function() {
 
             // Assert
             expect($scope.form.tags.$valid).toBe(true);
-            expect($scope.form.tags.$error.minTags).toBe(false);
+            expect($scope.form.tags.$error.minTags).toBeUndefined();
         });
 
         it('makes the element valid when the max-tags option is undefined', function() {
@@ -1144,7 +1174,7 @@ describe('tags-input directive', function() {
 
             // Assert
             expect($scope.form.tags.$valid).toBe(true);
-            expect($scope.form.tags.$error.minTags).toBe(false);
+            expect($scope.form.tags.$error.minTags).toBeUndefined();
         });
 
         it('re-validates the element when the min-tags option changes', function() {
@@ -1198,7 +1228,7 @@ describe('tags-input directive', function() {
 
             // Assert
             expect($scope.form.tags.$valid).toBe(true);
-            expect($scope.form.tags.$error.maxTags).toBe(false);
+            expect($scope.form.tags.$error.maxTags).toBeUndefined();
         });
 
         it('makes the element valid when the max-tags option is undefined', function() {
@@ -1211,7 +1241,7 @@ describe('tags-input directive', function() {
 
             // Assert
             expect($scope.form.tags.$valid).toBe(true);
-            expect($scope.form.tags.$error.maxTags).toBe(false);
+            expect($scope.form.tags.$error.maxTags).toBeUndefined();
         });
 
         it('re-validates the element when the max-tags option changes', function() {
@@ -1393,7 +1423,7 @@ describe('tags-input directive', function() {
 
             // Assert
             expect($scope.form.tags.$valid).toBe(true);
-            expect($scope.form.tags.$error.leftoverText).toBe(false);
+            expect($scope.form.tags.$error.leftoverText).toBeUndefined();
         });
 
         it('does not make the element invalid when some tag is removed and there is any leftover text', function() {
@@ -1409,7 +1439,7 @@ describe('tags-input directive', function() {
 
             // Assert
             expect($scope.form.tags.$valid).toBe(true);
-            expect($scope.form.tags.$error.leftoverText).toBe(false);
+            expect($scope.form.tags.$error.leftoverText).toBeUndefined();
         });
 
         it('makes the element valid and removes the leftoverText error when it gains focus', function() {
@@ -1424,7 +1454,7 @@ describe('tags-input directive', function() {
 
             // Assert
             expect($scope.form.tags.$valid).toBe(true);
-            expect($scope.form.tags.$error.leftoverText).toBe(false);
+            expect($scope.form.tags.$error.leftoverText).toBeUndefined();
         });
 
         it('re-validates the element when the allow-leftover-text option changes', function() {
@@ -1464,7 +1494,7 @@ describe('tags-input directive', function() {
                 newTag('foo', KEYS.enter);
 
                 // Assert
-                expect($scope.tags).toEqual([]);
+                expect($scope.tags).toBeUndefined();
             });
 
             it('does not add a tag when the comma key is pressed', function() {
@@ -1472,7 +1502,7 @@ describe('tags-input directive', function() {
                 newTag('foo', KEYS.comma);
 
                 // Assert
-                expect($scope.tags).toEqual([]);
+                expect($scope.tags).toBeUndefined();
             });
 
             it('does not add a tag when the space key is pressed', function() {
@@ -1480,21 +1510,117 @@ describe('tags-input directive', function() {
                 newTag('foo', KEYS.space);
 
                 // Assert
-                expect($scope.tags).toEqual([]);
+                expect($scope.tags).toBeUndefined();
             });
 
             it('does not add a tag when the element loses focus', function() {
                 // Arrange
-                isolateScope.newTag.text = 'foo';
+                isolateScope.newTag.text('foo');
 
                 // Act
                 isolateScope.events.trigger('input-blur');
 
                 // Assert
-                expect(isolateScope.tags).toEqual([]);
+                expect($scope.tags).toBeUndefined();
             });
         });
     });
+
+    describe('template option', function() {
+        var $templateCache;
+
+        function getTagContent(index) {
+            return getTag(index)
+                .find('ti-tag-item > ng-include')
+                .children()
+                .removeAttr('class')
+                .parent()
+                .html();
+        }
+
+        function getTagScope(index) {
+            return getTag(index)
+                .find('ti-tag-item > ng-include')
+                .children()
+                .scope();
+        }
+
+        beforeEach(function() {
+            inject(function(_$templateCache_) {
+                $templateCache = _$templateCache_;
+            });
+        });
+
+        it('initializes the option to the default template file', function() {
+            expect(isolateScope.options.template).toBe('ngTagsInput/tag-item.html');
+        });
+
+        it('loads and uses the provided template', function() {
+            // Arrange
+            $templateCache.put('customTemplate', '<span>{{data.id}}</span><span>{{data.text}}</span>');
+            compile('template="customTemplate"');
+
+            // Act
+            $scope.tags = [
+                { id: 1, text: 'Item1' },
+                { id: 2, text: 'Item2' },
+                { id: 3, text: 'Item3' }
+            ];
+            $scope.$digest();
+
+            // Assert
+            expect(getTagContent(0)).toBe('<span>1</span><span>Item1</span>');
+            expect(getTagContent(1)).toBe('<span>2</span><span>Item2</span>');
+            expect(getTagContent(2)).toBe('<span>3</span><span>Item3</span>');
+        });
+
+        it('makes the tag data available to the template', function() {
+            // Arrange
+            compile();
+
+            // Act
+            $scope.tags = [
+                { id: 1, text: 'Item1', image: 'item1.jpg' },
+                { id: 2, text: 'Item2', image: 'item2.jpg' },
+                { id: 3, text: 'Item3', image: 'item3.jpg' }
+            ];
+            $scope.$digest();
+
+            // Assert
+            expect(getTagScope(0).data).toEqual({ id: 1, text: 'Item1', image: 'item1.jpg' });
+            expect(getTagScope(1).data).toEqual({ id: 2, text: 'Item2', image: 'item2.jpg' });
+            expect(getTagScope(2).data).toEqual({ id: 3, text: 'Item3', image: 'item3.jpg' });
+        });
+
+        it('makes tags\' indexes available to the template', function() {
+            // Arrange
+            compile();
+
+            // Act
+            $scope.tags = generateTags(3);
+            $scope.$digest();
+
+            // Assert
+            expect(getTagScope(0).$index).toBe(0);
+            expect(getTagScope(1).$index).toBe(1);
+            expect(getTagScope(2).$index).toBe(2);
+        });
+
+        it('makes helper functions available to the template', function() {
+            // Arrange
+            compile();
+
+            // Act
+            $scope.tags = generateTags(1);
+            $scope.$digest();
+
+            // Assert
+            var scope = getTagScope(0);
+            expect(scope.$getDisplayText).not.toBeUndefined();
+            expect(scope.$removeTag).not.toBeUndefined();
+        });
+    });
+
 
     describe('navigation through tags', function() {
         describe('navigation is enabled', function() {
@@ -1565,6 +1691,19 @@ describe('tags-input directive', function() {
                 // Assert
                 expect($scope.tags).toEqual([{ text: 'Tag1' }, { text: 'Tag2' }]);
             });
+
+            it('clears the selection when the input content changes', function () {
+                // Arrange
+                $scope.tags = generateTags(3);
+                $scope.$digest();
+                sendKeyDown(KEYS.left);
+
+                // Act
+                changeInputValue('foo');
+
+                // Assert
+                expect(isolateScope.tagList.selected).toBe(null);
+            });
         });
     });
 
@@ -1625,6 +1764,34 @@ describe('tags-input directive', function() {
         });
     });
 
+    describe('on-tag-clicked option', function() {
+        it('calls the provided callback when a tag is clicked', function() {
+            // Arrange
+            $scope.tags = generateTags(3);
+            $scope.callback = jasmine.createSpy();
+            compile('on-tag-clicked="callback($tag)"');
+
+            // Act
+            getTag(1).click();
+
+            // Assert
+            expect($scope.callback).toHaveBeenCalledWith({ text: 'Tag2' });
+        });
+
+        it('doesn\'t call the provided callback when the remove button is clicked', function() {
+            // Arrange
+            $scope.tags = generateTags(3);
+            $scope.callback = jasmine.createSpy();
+            compile('on-tag-clicked="callback($tag)"');
+
+            // Act
+            getRemoveButton(1).click();
+
+            // Assert
+            expect($scope.callback).not.toHaveBeenCalled();
+        });
+    });
+
     describe('ng-disabled support', function () {
         it('disables the inner input element', function () {
             // Arrange/Act
@@ -1636,10 +1803,10 @@ describe('tags-input directive', function() {
 
         it('doesn\'t focus the input field when the container div is clicked', function() {
             // Arrange
+            compile('ng-disabled="true"');
+
             var input = getInput()[0];
             spyOn(input, 'focus');
-
-            compile('ng-disabled="true"');
 
             // Act
             element.find('div').click();
@@ -1652,6 +1819,7 @@ describe('tags-input directive', function() {
             // Arrange
             compile('ng-disabled="true"');
             $scope.tags = generateTags(1);
+            $scope.$digest();
 
             // Act
             getRemoveButton(0).click();
@@ -1671,6 +1839,53 @@ describe('tags-input directive', function() {
 
             // Assert
             expect(isolateScope.disabled).toBe(true);
+        });
+    });
+
+    describe('ng-required support', function() {
+        it('sets the required validation key when there is no tags', function() {
+            // Arrange/Act
+            compileWithForm('name="tags"', 'ng-required="true"');
+
+            // Assert
+            expect($scope.form.tags.$invalid).toBe(true);
+            expect($scope.form.tags.$error.required).toBe(true);
+        });
+
+        it('sets the required validation key when the model becomes empty', function() {
+            // Arrange
+            $scope.tags = ['Tag'];
+            compileWithForm('name="tags"', 'ng-required="true"');
+
+            // Act
+            $scope.tags.splice(0, 1);
+            $scope.$digest();
+
+            // Assert
+            expect($scope.form.tags.$invalid).toBe(true);
+            expect($scope.form.tags.$error.required).toBe(true);
+        });
+
+        it('doesn\'t set the required validation key when there is any tags', function() {
+            // Arrange
+            $scope.tags = [];
+            compileWithForm('name="tags"', 'ng-required="true"');
+
+            // Act
+            newTag('Tag');
+
+            // Assert
+            expect($scope.form.tags.$valid).toBe(true);
+            expect($scope.form.tags.$error.required).toBeUndefined();
+        });
+
+        it('doesn\'t set the required validation key when ng-required is false', function() {
+            // Arrange/Act
+            compileWithForm('name="tags"', 'ng-required="false"');
+
+            // Assert
+            expect($scope.form.tags.$valid).toBe(true);
+            expect($scope.form.tags.$error.required).toBeUndefined();
         });
     });
 
@@ -1738,6 +1953,26 @@ describe('tags-input directive', function() {
             expect(autocompleteObj.getTags()).toEqual([{ text: 'Tag1' }, { text: 'Tag2' }]);
         });
 
+        it('returns an empty list of tags when the model is undefined', function() {
+            // Arrange
+            $scope.$digest();
+
+            // Act/Assert
+            expect(autocompleteObj.getTags()).toEqual([]);
+        });
+
+        it('returns an empty list of tags when the model becomes undefined', function() {
+            // Arrange
+            $scope.tags = ['Tag1'];
+            $scope.$digest();
+
+            delete $scope.tags;
+            $scope.$digest();
+
+            // Act/Assert
+            expect(autocompleteObj.getTags()).toEqual([]);
+        });
+
         it('returns the current tag text', function() {
             // Arrange
             changeInputValue('ABC');
@@ -1770,41 +2005,30 @@ describe('tags-input directive', function() {
     });
 
     describe('hotkeys propagation handling', function() {
-        var hotkeys;
+        var hotkeys = [KEYS.enter, KEYS.comma, KEYS.space, KEYS.backspace];
 
         beforeEach(function() {
             compile('add-on-enter="true"', 'add-on-space="true"', 'add-on-comma="true"');
         });
 
         describe('modifier key is on', function() {
-            beforeEach(function() {
-                hotkeys = [KEYS.enter, KEYS.comma, KEYS.space, KEYS.backspace];
-            });
+            hotkeys.forEach(function(hotkey) {
+                it('does not prevent a hotkey from being propagated when the shift key is down (hotkey ' + hotkey + ')', function() {
+                    expect(sendKeyDown(hotkey, { shiftKey: true }).isDefaultPrevented()).toBe(false);
+                });
 
-            it('does not prevent any hotkey from being propagated when the shift key is down', function() {
-                angular.forEach(hotkeys, function(key) {
-                    expect(sendKeyDown(key, { shiftKey: true }).isDefaultPrevented()).toBe(false);
+                it('does not prevent a hotkey from being propagated when the alt key is down (hotkey ' + hotkey + ')', function() {
+                    expect(sendKeyDown(hotkey, { altKey: true }).isDefaultPrevented()).toBe(false);
+                });
+
+                it('does not prevent a hotkey from being propagated when the ctrl key is down (hotkey ' + hotkey + ')', function() {
+                    expect(sendKeyDown(hotkey, { ctrlKey: true }).isDefaultPrevented()).toBe(false);
+                });
+
+                it('does not prevent a hotkey from being propagated when the meta key is down (hotkey ' + hotkey + ')', function() {
+                    expect(sendKeyDown(hotkey, { metaKey: true }).isDefaultPrevented()).toBe(false);
                 });
             });
-
-            it('does not prevent any hotkey from being propagated when the alt key is down', function() {
-                angular.forEach(hotkeys, function(key) {
-                    expect(sendKeyDown(key, { altKey: true }).isDefaultPrevented()).toBe(false);
-                });
-            });
-
-            it('does not prevent any hotkey from being propagated when the ctrl key is down', function() {
-                angular.forEach(hotkeys, function(key) {
-                    expect(sendKeyDown(key, { ctrlKey: true }).isDefaultPrevented()).toBe(false);
-                });
-            });
-
-            it('does not prevent any hotkey from being propagated when the meta key is down', function() {
-                angular.forEach(hotkeys, function(key) {
-                    expect(sendKeyDown(key, { metaKey: true }).isDefaultPrevented()).toBe(false);
-                });
-            });
-
         });
 
         describe('modifier key is off', function() {

@@ -8,19 +8,22 @@
  * @description
  * Renders an input box with tag editing support.
  *
- * @param {string} ngModel Assignable angular expression to data-bind to.
+ * @param {string} ngModel Assignable Angular expression to data-bind to.
+ * @param {string=} [template=NA] URL or id of a custom template for rendering each tag.
  * @param {string=} [displayProperty=text] Property to be rendered as the tag label.
  * @param {string=} [keyProperty=text] Property to be used as a unique identifier for the tag.
  * @param {string=} [type=text] Type of the input element. Only 'text', 'email' and 'url' are supported values.
+ * @param {string=} [text=NA] Assignable Angular expression for data-binding to the element's text.
  * @param {number=} tabindex Tab order of the control.
  * @param {string=} [placeholder=Add a tag] Placeholder text for the control.
  * @param {number=} [minLength=3] Minimum length for a new tag.
  * @param {number=} [maxLength=MAX_SAFE_INTEGER] Maximum length allowed for a new tag.
  * @param {number=} [minTags=0] Sets minTags validation error key if the number of tags added is less than minTags.
- * @param {number=} [maxTags=MAX_SAFE_INTEGER] Sets maxTags validation error key if the number of tags added is greater than maxTags.
+ * @param {number=} [maxTags=MAX_SAFE_INTEGER] Sets maxTags validation error key if the number of tags added is greater
+ *    than maxTags.
  * @param {boolean=} [allowLeftoverText=false] Sets leftoverText validation error key if there is any leftover text in
- *                                             the input element when the directive loses focus.
- * @param {string=} [removeTagSymbol=×] Symbol character for the remove tag button.
+ *    the input element when the directive loses focus.
+ * @param {string=} [removeTagSymbol=×] (Obsolete) Symbol character for the remove tag button.
  * @param {boolean=} [addOnEnter=true] Flag indicating that a new tag will be added on pressing the ENTER key.
  * @param {boolean=} [addOnSpace=false] Flag indicating that a new tag will be added on pressing the SPACE key.
  * @param {boolean=} [addOnComma=true] Flag indicating that a new tag will be added on pressing the COMMA key.
@@ -29,18 +32,20 @@
  * @param {string=} [pasteSplitPattern=,] Regular expression used to split the pasted text into tags.
  * @param {boolean=} [replaceSpacesWithDashes=true] Flag indicating that spaces will be replaced with dashes.
  * @param {string=} [allowedTagsPattern=.+] Regular expression that determines whether a new tag is valid.
- * @param {boolean=} [enableEditingLastTag=false] Flag indicating that the last tag will be moved back into
- *                                                the new tag input box instead of being removed when the backspace key
- *                                                is pressed and the input box is empty.
- * @param {boolean=} [addFromAutocompleteOnly=false] Flag indicating that only tags coming from the autocomplete list will be allowed.
- *                                                   When this flag is true, addOnEnter, addOnComma, addOnSpace, addOnBlur and
- *                                                   allowLeftoverText values are ignored.
+ * @param {boolean=} [enableEditingLastTag=false] Flag indicating that the last tag will be moved back into the new tag
+ *    input box instead of being removed when the backspace key is pressed and the input box is empty.
+ * @param {boolean=} [addFromAutocompleteOnly=false] Flag indicating that only tags coming from the autocomplete list
+ *    will be allowed. When this flag is true, addOnEnter, addOnComma, addOnSpace and addOnBlur values are ignored.
  * @param {boolean=} [spellcheck=true] Flag indicating whether the browser's spellcheck is enabled for the input field or not.
- * @param {expression} onTagAdding Expression to evaluate that will be invoked before adding a new tag. The new tag is available as $tag. This method must return either true or false. If false, the tag will not be added.
- * @param {expression} onTagAdded Expression to evaluate upon adding a new tag. The new tag is available as $tag.
- * @param {expression} onInvalidTag Expression to evaluate when a tag is invalid. The invalid tag is available as $tag.
- * @param {expression} onTagRemoving Expression to evaluate that will be invoked before removing a tag. The tag is available as $tag. This method must return either true or false. If false, the tag will not be removed.
- * @param {expression} onTagRemoved Expression to evaluate upon removing an existing tag. The removed tag is available as $tag.
+ * @param {expression=} [onTagAdding=NA] Expression to evaluate that will be invoked before adding a new tag. The new
+ *    tag is available as $tag. This method must return either true or false. If false, the tag will not be added.
+ * @param {expression=} [onTagAdded=NA] Expression to evaluate upon adding a new tag. The new tag is available as $tag.
+ * @param {expression=} [onInvalidTag=NA] Expression to evaluate when a tag is invalid. The invalid tag is available as $tag.
+ * @param {expression=} [onTagRemoving=NA] Expression to evaluate that will be invoked before removing a tag. The tag
+ *    is available as $tag. This method must return either true or false. If false, the tag will not be removed.
+ * @param {expression=} [onTagRemoved=NA] Expression to evaluate upon removing an existing tag. The removed tag is
+ *    available as $tag.
+ * @param {expression=} [onTagClicked=NA] Expression to evaluate upon clicking an existing tag. The clicked tag is available as $tag.
  */
 tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInputConfig, tiUtil) {
     function TagList(options, events, onTagAdding, onTagRemoving) {
@@ -77,7 +82,7 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
             var tagText = getTagText(tag);
 
             if (options.replaceSpacesWithDashes) {
-                tagText = tagText.replace(/\s/g, '-');
+                tagText = tiUtil.replaceSpacesWithDashes(tagText);
             }
 
             setTagText(tag, tagText);
@@ -184,11 +189,13 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
         require: 'ngModel',
         scope: {
             tags: '=ngModel',
+            text: '=?',
             onTagAdding: '&',
             onTagAdded: '&',
             onInvalidTag: '&',
             onTagRemoving: '&',
-            onTagRemoved: '&'
+            onTagRemoved: '&',
+            onTagClicked: '&'
         },
         replace: false,
         transclude: true,
@@ -197,6 +204,7 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
             $scope.events = tiUtil.simplePubSub();
 
             tagsInputConfig.load('tagsInput', $scope, $attrs, {
+                template: [String, 'ngTagsInput/tag-item.html'],
                 type: [String, 'text', validateType],
                 placeholder: [String, 'Add a tag'],
                 tabindex: [Number, null],
@@ -236,10 +244,10 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
                         input[0].focus();
                     },
                     getTags: function() {
-                        return $scope.tags;
+                        return $scope.tagList.items;
                     },
                     getCurrentTagText: function() {
-                        return $scope.newTag.text;
+                        return $scope.newTag.text();
                     },
                     getOptions: function() {
                         return $scope.options;
@@ -247,6 +255,20 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
                     on: function(name, handler) {
                         $scope.events.on(name, handler);
                         return this;
+                    }
+                };
+            };
+
+            this.registerTagItem = function() {
+                return {
+                    getOptions: function() {
+                        return $scope.options;
+                    },
+                    removeTag: function(index) {
+                        if ($scope.disabled) {
+                            return;
+                        }
+                        $scope.tagList.remove(index);
                     }
                 };
             };
@@ -261,22 +283,26 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
                 setElementValidity;
 
             setElementValidity = function() {
-                ngModelCtrl.$setValidity('maxTags', scope.tags.length <= options.maxTags);
-                ngModelCtrl.$setValidity('minTags', scope.tags.length >= options.minTags);
-                ngModelCtrl.$setValidity('leftoverText', scope.hasFocus || options.allowLeftoverText ? true : !scope.newTag.text);
+                ngModelCtrl.$setValidity('maxTags', tagList.items.length <= options.maxTags);
+                ngModelCtrl.$setValidity('minTags', tagList.items.length >= options.minTags);
+                ngModelCtrl.$setValidity('leftoverText', scope.hasFocus || options.allowLeftoverText ? true : !scope.newTag.text());
+            };
+
+            ngModelCtrl.$isEmpty = function(value) {
+                return !value || !value.length;
             };
 
             scope.newTag = {
-                text: '',
-                invalid: null,
-                setText: function(value) {
-                    this.text = value;
-                    events.trigger('input-change', value);
-                }
-            };
-
-            scope.getDisplayText = function(tag) {
-                return tiUtil.safeToString(tag[options.displayProperty]);
+                text: function(value) {
+                    if (angular.isDefined(value)) {
+                        scope.text = value;
+                        events.trigger('input-change', value);
+                    }
+                    else {
+                        return scope.text || '';
+                    }
+                },
+                invalid: null
             };
 
             scope.track = function(tag) {
@@ -284,12 +310,21 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
             };
 
             scope.$watch('tags', function(value) {
-                scope.tags = tiUtil.makeObjectArray(value, options.displayProperty);
-                tagList.items = scope.tags;
+                if (value) {
+                    tagList.items = tiUtil.makeObjectArray(value, options.displayProperty);
+                    scope.tags = tagList.items;
+                }
+                else {
+                    tagList.items = [];
+                }
             });
 
             scope.$watch('tags.length', function() {
                 setElementValidity();
+
+                // ngModelController won't trigger validators when the model changes (because it's an array),
+                // so we need to do it ourselves. Unfortunately this won't trigger any registered formatter.
+                ngModelCtrl.$validate();
             });
 
             attrs.$observe('disabled', function(value) {
@@ -298,9 +333,6 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
 
             scope.eventHandlers = {
                 input: {
-                    change: function(text) {
-                        events.trigger('input-change', text);
-                    },
                     keydown: function($event) {
                         events.trigger('input-keydown', $event);
                     },
@@ -334,7 +366,15 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
                 },
                 host: {
                     click: function() {
+                        if (scope.disabled) {
+                            return;
+                        }
                         input[0].focus();
+                    }
+                },
+                tag: {
+                    click: function(tag) {
+                        events.trigger('tag-clicked', { $tag: tag });
                     }
                 }
             };
@@ -343,13 +383,16 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
                 .on('tag-added', scope.onTagAdded)
                 .on('invalid-tag', scope.onInvalidTag)
                 .on('tag-removed', scope.onTagRemoved)
+                .on('tag-clicked', scope.onTagClicked)
                 .on('tag-added', function() {
-                    scope.newTag.setText('');
+                    scope.newTag.text('');
                 })
                 .on('tag-added tag-removed tag-edit', function() {
-                    // Sets the element to its dirty state
-                    // In Angular 1.3 this will be replaced with $setDirty.
-                    ngModelCtrl.$setViewValue(scope.tags);
+                    scope.tags = tagList.items;
+                    // Ideally we should be able call $setViewValue here and let it in turn call $setDirty and $validate
+                    // automatically, but since the model is an array, $setViewValue does nothing and it's up to us to do it.
+                    // Unfortunately this won't trigger any registered $parser and there's no safe way to do it.
+                    ngModelCtrl.$setDirty();
                 })
                 .on('tag-select', function(elem) {
                     $timeout(function() {
@@ -375,18 +418,17 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
                 })
                 .on('input-blur', function() {
                     if (options.addOnBlur && !options.addFromAutocompleteOnly) {
-                        tagList.addText(scope.newTag.text);
+                        tagList.addText(scope.newTag.text());
                     }
                     element.triggerHandler('blur');
                     setElementValidity();
                 })
                 .on('input-keydown', function(event) {
                     var key = event.keyCode,
-                        isModifier = event.shiftKey || event.altKey || event.ctrlKey || event.metaKey,
                         addKeys = {},
                         shouldAdd, shouldRemove, shouldSelect, shouldEditLastTag;
 
-                    if (isModifier || hotkeys.indexOf(key) === -1) {
+                    if (tiUtil.isModifierOn(event) || hotkeys.indexOf(key) === -1) {
                         return;
                     }
 
@@ -396,11 +438,11 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
 
                     shouldAdd = !options.addFromAutocompleteOnly && addKeys[key];
                     shouldRemove = (key === KEYS.backspace || key === KEYS.delete) && tagList.selected;
-                    shouldEditLastTag = key === KEYS.backspace && scope.newTag.text.length === 0 && options.enableEditingLastTag;
-                    shouldSelect = (key === KEYS.backspace || key === KEYS.left || key === KEYS.right) && scope.newTag.text.length === 0 && !options.enableEditingLastTag;
+                    shouldEditLastTag = key === KEYS.backspace && scope.newTag.text().length === 0 && options.enableEditingLastTag;
+                    shouldSelect = (key === KEYS.backspace || key === KEYS.left || key === KEYS.right) && scope.newTag.text().length === 0 && !options.enableEditingLastTag;
 
                     if (shouldAdd) {
-                        tagList.addText(scope.newTag.text);
+                        tagList.addText(scope.newTag.text());
                     }
                     else if (shouldEditLastTag) {
                         var tag;
@@ -409,7 +451,7 @@ tagsInput.directive('tagsInput', function($timeout, $document, $window, tagsInpu
                         tag = tagList.removeSelected();
 
                         if (tag) {
-                            scope.newTag.setText(tag[options.displayProperty]);
+                            scope.newTag.text(tag[options.displayProperty]);
                         }
                     }
                     else if (shouldRemove) {

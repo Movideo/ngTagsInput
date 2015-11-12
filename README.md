@@ -10,7 +10,7 @@ Tags input directive for AngularJS. Check out the [ngTagsInput website](http://m
 
 ## Requirements
 
- - AngularJS 1.2.24+ (v1.3 isn't officially supported yet)
+ - AngularJS 1.3+
  - A modern browser (Chrome 31+, Firefox 29+, Safari 7+, Opera 12+, IE 10+)
 
 ## Installing
@@ -35,7 +35,7 @@ Now all you have to do is add the scripts to your application. Just make sure th
 ## Usage
 
  1. Add the `ngTagsInput` module as a dependency in your AngularJS app;
- 2. Add the custom directive `<tags-input>` to the HTML file where you want to use an input tag control and bind it to a property of your model. That property, if it exists, must be an array of objects and each object must have a property named `text` containing the tag text;
+ 2. Add the custom element `<tags-input>` to the HTML file where you want to use an input tag control and bind it to a property of your model. That property, if it exists, must be an array of objects and each object must have a property named `text` containing the tag text;
  3. Set up the options that make sense to your application;
  4. Enable autocomplete, if you want to use it, by adding the directive `<auto-complete>` inside the `<tags-input>` tag, and bind it to a function of your model. That function must return either an array of objects or a promise that eventually resolves to an array of objects (same rule from step 2 applies here);
  5. Customize the CSS classes, if you want to.

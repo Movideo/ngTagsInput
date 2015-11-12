@@ -93,21 +93,27 @@ describe('tiUtil factory', function() {
 
     describe('makeObjectArray', function() {
         it('converts a non-object array into an object array using the provided key', function() {
-            expect(tiUtil.makeObjectArray(['a', 'b', 'c'], 'prop')).toEqual([
+            var array = ['a', 'b', 'c'],
+                result = tiUtil.makeObjectArray(array, 'prop');
+
+            expect(result).not.toBe(array);
+            expect(result).toEqual([
                 { prop: 'a' },
                 { prop: 'b' },
                 { prop: 'c' }
             ]);
         });
 
-        it('returns the provided array if it is empty', function() {
-            var array = [];
-            expect(tiUtil.makeObjectArray(array, 'prop')).toBe(array);
-        });
-
-        it('returns the provided array if its first element is an object', function() {
-            var array = [{}];
-            expect(tiUtil.makeObjectArray(array, 'prop')).toBe(array);
+        [
+            { desc: 'an empty array', value: [] },
+            { desc: 'an array of objects', value: [{}] },
+            { desc: 'null', value: null },
+            { desc: 'a number', value: 1 },
+            { desc: 'a string', value: 'a' }
+        ].forEach(function(item) {
+            it('returns the provided argument itself if it is ' + item.desc, function() {
+                expect(tiUtil.makeObjectArray(item.value, 'prop')).toBe(item.value);
+            });
         });
     });
 
@@ -133,11 +139,21 @@ describe('tiUtil factory', function() {
         it('returns null when the provided array is empty', function() {
             expect(tiUtil.findInObjectArray([], { prop: 'foo' }, 'prop')).toBe(null);
         });
+
+        it('uses a custom comparer to find an item within an array', function() {
+            // Arrange
+            var caseSensitiveComparer = function(a, b) { return a === b; };
+
+            // Act/Assert
+            expect(tiUtil.findInObjectArray(array, { prop: 'BAR' }, 'prop', caseSensitiveComparer)).toBe(null);
+        });
     });
 
     describe('safeHighlight', function() {
         it('highlights the provided text', function() {
             expect(tiUtil.safeHighlight('abc', 'b')).toBe('a<em>b</em>c');
+            expect(tiUtil.safeHighlight('aBc', 'b')).toBe('a<em>B</em>c');
+            expect(tiUtil.safeHighlight('abc', 'B')).toBe('a<em>b</em>c');
         });
 
         it('highlights HTML entities', function() {
@@ -229,6 +245,44 @@ describe('tiUtil factory', function() {
 
             // Assert
             expect(result).toBe(3);
+        });
+    });
+
+    describe('replaceSpacesWithDashes', function() {
+        it('replaces spaces with dashes within the provided string', function() {
+            expect(tiUtil.replaceSpacesWithDashes('a b c')).toBe('a-b-c');
+            expect(tiUtil.replaceSpacesWithDashes('a     b     c')).toBe('a-----b-----c');
+            expect(tiUtil.replaceSpacesWithDashes('a b c ')).toBe('a-b-c');
+            expect(tiUtil.replaceSpacesWithDashes(' a b c')).toBe('a-b-c');
+            expect(tiUtil.replaceSpacesWithDashes(' a b c ')).toBe('a-b-c');
+            expect(tiUtil.replaceSpacesWithDashes('')).toBe('');
+            expect(tiUtil.replaceSpacesWithDashes(null)).toBe('');
+            expect(tiUtil.replaceSpacesWithDashes()).toBe('');
+        });
+    });
+
+    describe('isModifierOn', function() {
+        it('returns true if a modifier is on', function() {
+            expect(tiUtil.isModifierOn({ shiftKey: true })).toBe(true);
+            expect(tiUtil.isModifierOn({ ctrlKey: true })).toBe(true);
+            expect(tiUtil.isModifierOn({ altKey: true })).toBe(true);
+            expect(tiUtil.isModifierOn({ metaKey: true })).toBe(true);
+        });
+
+        it('returns false if all modifiers are off', function() {
+            expect(tiUtil.isModifierOn({
+                shiftKey: false,
+                ctrlKey: false,
+                altKey: false,
+                metaKey: false
+            })).toBe(false);
+
+            expect(tiUtil.isModifierOn({
+                shiftKey: false,
+                ctrlKey: false,
+                altKey: true,
+                metaKey: false
+            })).toBe(true);
         });
     });
 });
