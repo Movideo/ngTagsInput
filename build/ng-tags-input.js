@@ -5,7 +5,7 @@
  * Copyright (c) 2013-2015 Michael Benford
  * License: MIT
  *
- * Generated at 2015-11-12 16:45:43 +1100
+ * Generated at 2015-11-23 12:21:12 +1100
  */
 (function() {
 'use strict';
@@ -173,13 +173,19 @@ tagsInput.directive('tagsInput', ["$timeout", "$document", "$window", "tagsInput
         self._undoValue = null;
 
         self.closeEdit = function() {
-            self.selectedTagElement.html(self.selectedTag.value);
+            var tagContent = (options.replaceSpacesWithDashes) ? tiUtil.replaceSpacesWithDashes(self.selectedTag.value)
+                : self.selectedTag.value;
+
+            self.selectedTagElement.html(tagContent);
             self.selectedTagElement = null;
             self._isEdit = false;
         };
 
         self.edited = function() {
-            self.selectedTag.value = self.selectedTagElement.html();
+            var tagContent = (options.replaceSpacesWithDashes) ? tiUtil.replaceSpacesWithDashes(self.selectedTag.value)
+                : self.selectedTag.value;
+
+            self.selectedTag.value = tagContent;
             events.trigger('tag-edit', self.selectedTagElement);
             self.closeEdit();
         };
@@ -523,6 +529,7 @@ tagsInput.directive('tagsInput', ["$timeout", "$document", "$window", "tagsInput
         }
     };
 }]);
+
 
 /**
  * @ngdoc directive
